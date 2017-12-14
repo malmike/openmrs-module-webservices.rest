@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -34,49 +35,53 @@ import java.util.List;
  * testable
  */
 public class ModuleFactoryWrapper {
-	
+
 	public static final String STOP_MODULE_SKIP_REFRESH_EXCEPTION_MESSAGE = "Failed to stop module without WAC refresh";
-	
+
 	public Module parseModuleFile(MultipartFile file) throws IOException {
 		return new ModuleFileParser(file.getInputStream()).parse();
 	}
-	
+
+	public Module parseInputStreamFile(InputStream inputStream) throws IOException {
+		return new ModuleFileParser(inputStream).parse();
+	}
+
 	public Module getModuleById(String id) {
 		return ModuleFactory.getModuleById(id);
 	}
-	
+
 	public void refreshWebApplicationContext(ServletContext context) {
 		WebModuleUtil.refreshWAC(context, false, null);
 	}
-	
+
 	public Collection<Module> getLoadedModules() {
 		return ModuleFactory.getLoadedModules();
 	}
-	
+
 	public boolean isModuleStarted(Module module) {
 		return module.isStarted();
 	}
-	
+
 	public boolean isModuleStopped(Module module) {
 		return !isModuleStarted(module);
 	}
-	
+
 	public void unloadModule(Module module) {
 		ModuleFactory.unloadModule(module);
 	}
-	
+
 	public File insertModuleFile(Module module, String filename) throws FileNotFoundException {
 		return ModuleUtil.insertModuleFile(new FileInputStream(module.getFile()), filename);
 	}
-	
+
 	public Module loadModule(File moduleFile) {
 		return ModuleFactory.loadModule(moduleFile);
 	}
-	
+
 	public List<Module> stopModuleAndGetDependent(Module module) {
 		return ModuleFactory.stopModule(module, false, true);
 	}
-	
+
 	public void stopModule(Module module, ServletContext servletContext) {
 		ModuleFactory.stopModule(module);
 		WebModuleUtil.stopModule(module, servletContext);
@@ -84,20 +89,20 @@ public class ModuleFactoryWrapper {
 			throw new RuntimeException("Failed to stop module: " + module.getName() + ", " + module.getStartupErrorMessage());
 		}
 	}
-	
+
 	public boolean startModule(Module module, ServletContext servletContext) {
 		return startModule(module, servletContext, false);
 	}
-	
+
 	public boolean startModule(Module module, ServletContext servletContext, boolean delayRefreshContext) {
 		ModuleFactory.startModule(module);
 		return WebModuleUtil.startModule(module, servletContext, delayRefreshContext);
 	}
-	
+
 	public boolean startModuleSkipRefresh(Module module, ServletContext servletContext) {
 		return startModule(module, servletContext, true);
 	}
-	
+
 	/**
 	 * It's hacky method to workaround the fact that before 2.x platform
 	 * {@link WebModuleUtil#stopModule(Module, ServletContext, boolean)} was private. It is
@@ -121,7 +126,7 @@ public class ModuleFactoryWrapper {
 			throw new RuntimeException(STOP_MODULE_SKIP_REFRESH_EXCEPTION_MESSAGE, e);
 		}
 	}
-	
+
 	/**
 	 * hack to work around the change in ModuleFactory API
 	 */
@@ -150,7 +155,7 @@ public class ModuleFactoryWrapper {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void checkPrivilege() throws APIAuthenticationException {
 		if (!Context.hasPrivilege(PrivilegeConstants.MANAGE_MODULES)) {
 			throw new APIAuthenticationException("Privilege required: " + PrivilegeConstants.MANAGE_MODULES);

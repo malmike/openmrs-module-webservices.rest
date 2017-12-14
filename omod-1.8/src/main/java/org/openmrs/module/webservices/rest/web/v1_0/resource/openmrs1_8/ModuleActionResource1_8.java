@@ -248,7 +248,7 @@ public class ModuleActionResource1_8 extends BaseDelegatingResource<ModuleAction
 		        .property("modules", new ArrayProperty(new StringProperty().example("moduleId")))
 		        .property("allModules", new BooleanProperty())
 		        .property("action", new EnumProperty(ModuleAction.Action.class))
-
+		        
 		        .required("action");
 	}
 	
